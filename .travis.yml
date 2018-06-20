@@ -1,0 +1,8 @@
+language: c
+sudo: required
+before_install:
+- sudo apt-get install llvm
+- sudo apt-get install valgrind
+compiler:
+- gcc
+script: ./travis.sh
