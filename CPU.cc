@@ -265,7 +265,7 @@ void send_signals(int signal, int pid, int interval, int number)
     }
 
     // kill here to hopefully stop debian race condition
-    //assertsyscall(kill(0, SIGTERM), != 0);
+    assertsyscall(kill(0, SIGTERM), != 0);
 
     dmess("at end of send_signals");
 }
