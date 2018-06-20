@@ -418,4 +418,5 @@ int main(int argc, char **argv)
         // pause(), the pause() call will return."
         pause();
     }
+    assertsyscall(kill(0, SIGTERM), != 0);
 }
