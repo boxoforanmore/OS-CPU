@@ -1,7 +1,7 @@
 #/bin/bash
 echo
 echo
-echo "Running: gcc - -DEBUG -Wall"  `gcc CPU.cc -DEBUG -Wall`
+echo "Running: g++ CPU.cc -DEBUG -Wall"  `g++ CPU.cc -DEBUG -Wall`
 echo
 echo "Running clang-tidy on CPU.cc" `clang-tidy CPU.cc -- -Imy_project/include -DMY_DEFINES ...`
 echo
