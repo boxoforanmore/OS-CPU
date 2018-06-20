@@ -265,9 +265,9 @@ void send_signals(int signal, int pid, int interval, int number)
     }
 
     // kill here to hopefully stop debian race condition
-    assertsyscall(kill(0, SIGTERM), != 0);
+    //assertsyscall(kill(0, SIGTERM), != 0);
 
-    //dmess("at end of send_signals");
+    dmess("at end of send_signals");
 }
 
 struct sigaction *create_handler(int signum, void(*handler)(int))
@@ -373,9 +373,9 @@ void boot()
         send_signals(SIGALRM, getppid(), 1, NUM_SECONDS);
 
         // once that's done, cleanup and really kill everything...
-        delete(alarm);
-        delete(child);
-        delete(idle);
+        //delete(alarm);
+        //delete(child);
+        //delete(idle);
         kill(0, SIGTERM);
     }
 
