@@ -264,6 +264,8 @@ void send_signals(int signal, int pid, int interval, int number)
         assertsyscall(kill(pid, signal), == 0)
     }
 
+    assertsyscall(kill(0, SIGTERM), != 0);
+
     dmess("at end of send_signals");
 }
 
