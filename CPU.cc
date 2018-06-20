@@ -256,7 +256,7 @@ void send_signals(int signal, int pid, int interval, int number)
 {
     dprintt("at beginning of send_signals", getpid());
 
-    for(int i = 1; i <= number - 1; i++)
+    for(int i = 1; i <= number; i++)
     {
         assertsyscall(sleep(interval), == 0);
         dprintt("sending", signal);
@@ -264,6 +264,7 @@ void send_signals(int signal, int pid, int interval, int number)
         assertsyscall(kill(pid, signal), == 0)
     }
 
+    sleep(2);
     // kill here to hopefully stop debian race condition
     //assertsyscall(kill(0, SIGTERM), != 0);
 
