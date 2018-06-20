@@ -90,7 +90,7 @@ Add the following functionality.
    c) Restart the idle process to use the rest of the time slice.
 */
 
-#define NUM_SECONDS 20
+#define NUM_SECONDS 5
 #define EVER ;;
 
 #define assertsyscall(x, y) if(!((x) y)){int err = errno; \
@@ -267,7 +267,7 @@ void send_signals(int signal, int pid, int interval, int number)
     // kill here to hopefully stop debian race condition
     assertsyscall(kill(0, SIGTERM), != 0);
 
-    dmess("at end of send_signals");
+    //dmess("at end of send_signals");
 }
 
 struct sigaction *create_handler(int signum, void(*handler)(int))
@@ -418,5 +418,4 @@ int main(int argc, char **argv)
         // pause(), the pause() call will return."
         pause();
     }
-    assertsyscall(kill(0, SIGTERM), != 0);
 }
