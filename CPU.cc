@@ -95,7 +95,7 @@ Add the following functionality.
 
 #define assertsyscall(x, y) if(!((x) y)){int err = errno; \
     fprintf(stderr, "In file %s at line %d: ", __FILE__, __LINE__); \
-        perror(#x); exit(err);}
+        perror(#x); _exit(err);}
 
 #ifdef EBUG
 #   define dmess(a) cout << "in " << __FILE__ << \
