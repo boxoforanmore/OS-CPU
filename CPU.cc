@@ -256,7 +256,7 @@ void send_signals(int signal, int pid, int interval, int number)
 {
     dprintt("at beginning of send_signals", getpid());
 
-    for(int i = 1; i <= number; i++)
+    for(int i = 1; i <= number - 1; i++)
     {
         assertsyscall(sleep(interval), == 0);
         dprintt("sending", signal);
