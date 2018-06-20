@@ -90,7 +90,7 @@ Add the following functionality.
    c) Restart the idle process to use the rest of the time slice.
 */
 
-#define NUM_SECONDS 5
+#define NUM_SECONDS 20
 #define EVER ;;
 
 #define assertsyscall(x, y) if(!((x) y)){int err = errno; \
@@ -264,6 +264,7 @@ void send_signals(int signal, int pid, int interval, int number)
         assertsyscall(kill(pid, signal), == 0)
     }
 
+    // kill here to hopefully stop debian race condition
     assertsyscall(kill(0, SIGTERM), != 0);
 
     dmess("at end of send_signals");
@@ -310,7 +311,7 @@ void scheduler(int signum)
     tocont->state = RUNNING;
     if(kill(tocont->pid, SIGCONT) == -1)
     {
-        WRITES("in sceduler kill error: ");
+        WRITES("in scheduler kill error: ");
         WRITEI(errno);
         WRITES("\n");
         return;
