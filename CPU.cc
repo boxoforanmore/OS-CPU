@@ -395,7 +395,7 @@ void create_idle()
     {
         pause();
         perror("pause in create_idle_pcb");
-        exit(0);
+        _exit(0);
     }
 }
 
