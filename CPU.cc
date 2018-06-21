@@ -1,6 +1,7 @@
 #include <iostream>
 #include <list>
 #include <iterator>
+#include <cstring>
 #include <unistd.h>
 #include <signal.h>
 #include <errno.h>
@@ -8,7 +9,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <assert.h>
-#include <cstring>
 
 /*
 This program does the following.
@@ -22,7 +22,7 @@ output (approximately):
 
 $ ./a.out
 state:        3
-name:         IDLE
+name:         idle
 pid:          21145
 ppid:         21143
 interrupts:   0
@@ -134,13 +134,15 @@ struct PCB
 };
 
 PCB *running;
-PCB *idle;
+PCB *idle_pcb;
 
 // http://www.cplusplus.com/reference/list/list/
-list<PCB *> new_list;
 list<PCB *> processes;
 
 int sys_time;
+int timer;
+struct sigaction *alarm_handler;
+struct sigaction *child_handler;
 
 /*
 ** Async-safe integer to a string. i is assumed to be positive. The number
@@ -264,11 +266,11 @@ void send_signals(int signal, int pid, int interval, int number)
         assertsyscall(kill(pid, signal), == 0)
     }
 
-    sleep(2);
-    // kill here to hopefully stop debian race condition
-    //assertsyscall(kill(0, SIGTERM), != 0);
-
     dmess("at end of send_signals");
+    delete(alarm_handler);
+    delete(child_handler);
+    delete(idle_pcb);
+    assertsyscall(kill(0, SIGTERM), != 0);
 }
 
 struct sigaction *create_handler(int signum, void(*handler)(int))
@@ -303,7 +305,7 @@ void scheduler(int signum)
     assert(signum == SIGALRM);
     sys_time++;
 
-    PCB* tocont = idle;
+    PCB* tocont = idle_pcb;
 
     WRITES("continuing");
     WRITEI(tocont->pid);
@@ -312,7 +314,7 @@ void scheduler(int signum)
     tocont->state = RUNNING;
     if(kill(tocont->pid, SIGCONT) == -1)
     {
-        WRITES("in scheduler kill error: ");
+        WRITES("in sceduler kill error: ");
         WRITEI(errno);
         WRITES("\n");
         return;
@@ -364,23 +366,16 @@ void boot()
 
     ISV[SIGALRM] = scheduler;
     ISV[SIGCHLD] = process_done;
-    struct sigaction *alarm = create_handler(SIGALRM, ISR);
-    struct sigaction *child = create_handler(SIGCHLD, ISR);
+    alarm_handler = create_handler(SIGALRM, ISR);
+    child_handler = create_handler(SIGCHLD, ISR);
 
     // start up clock interrupt
-    int ret;
-    if((ret = fork()) == 0)
+    if((timer = fork()) == 0)
     {
         send_signals(SIGALRM, getppid(), 1, NUM_SECONDS);
-
-        // once that's done, cleanup and really kill everything...
-        delete(alarm);
-        delete(child);
-        delete(idle);
-        assertsyscall(kill(0, SIGTERM), != 0);
     }
 
-    if(ret < 0)
+    if(timer < 0)
     {
         perror("fork");
     }
@@ -388,18 +383,19 @@ void boot()
 
 void create_idle()
 {
-    idle = new(PCB);
-    idle->state = READY;
-    idle->name = "IDLE";
-    idle->ppid = getpid();
-    idle->interrupts = 0;
-    idle->switches = 0;
-    idle->started = sys_time;
+    idle_pcb = new(PCB);
+    idle_pcb->state = READY;
+    idle_pcb->name = "IDLE";
+    idle_pcb->ppid = getpid();
+    idle_pcb->interrupts = 0;
+    idle_pcb->switches = 0;
+    idle_pcb->started = sys_time;
 
-    if((idle->pid = fork()) == 0)
+    if((idle_pcb->pid = fork()) == 0)
     {
         pause();
-        perror("pause in create_idle");
+        perror("pause in create_idle_pcb");
+        exit(0);
     }
 }
 
@@ -408,15 +404,9 @@ int main(int argc, char **argv)
     boot();
 
     create_idle();
-    running = idle;
+    running = idle_pcb;
     cout << running;
 
-    // we keep this process around so that the children don't die and
-    // to keep the IRQs in place.
-    for(EVER)
-    {
-        // "Upon termination of a signal handler started during a
-        // pause(), the pause() call will return."
-        pause();
-    }
+    int status;
+    waitpid(timer, &status, 0);
 }
