@@ -5,6 +5,7 @@ sudo: required
 before_install:
 - sudo apt-get install llvm
 - sudo apt-get install valgrind
+- sudo apt-get update
 compiler:
 - g++
 script: ./travis.sh
