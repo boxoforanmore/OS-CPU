@@ -1,3 +1,5 @@
+os: linux
+dist: debian
 language: cpp
 sudo: required
 before_install:
