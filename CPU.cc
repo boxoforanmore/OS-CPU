@@ -43,7 +43,7 @@ continuing    21145
 ---- leaving scheduler
 in CPU.cc at 245 sending signal = 14
 in CPU.cc at 246 to pid = 21143
-In ISR stopped:     21145
+In ISR stopped:     21/145
 ---- entering scheduler
 continuing    21145
 ---- leaving scheduler
@@ -117,7 +117,7 @@ using namespace std;
 
 // http://man7.org/linux/man-pages/man7/signal-safety.7.html
 
-#define WRITES(a) { const char *foo = a; write(1, foo, strlen(foo)); }
+#define WRITES(a) { const char *foo = a; write(1, foo, strlen(foo)); fflush(stdout);}
 #define WRITEI(a) { char buf[10]; assert(eye2eh(a, buf, 10, 10) != -1); WRITES(buf); }
 
 enum STATE { NEW, RUNNING, WAITING, READY, TERMINATED };
@@ -306,7 +306,94 @@ void scheduler(int signum)
     assert(signum == SIGALRM);
     sys_time++;
 
-    // Round robin w/ iterator
+    running->interrupts += 1;
+    running->state = READY;
+
+    /*
+    int i = 0;
+    int newCount = 0;
+    int readyCount = 0;
+    while(*(processes)[i]){
+        if((newCount == 0) && (*processes[i])->state == NEW){
+            (*processes[i])->state = RUNNING;
+            newCount = 1;
+            (*processes[i])->started = sys_time;
+            (*processes[i])->pid = fork();
+            
+            if((*processes[i])->pid < 0) {
+                perror("Fork failed");
+            }
+            else if((*processes[i])->pid == 0) {
+                assertsyscall(execlp((*processes[i]), 0), < 0);
+                return;
+            }
+        }
+        if((*processes[i])->state == READY){
+            readyCount += 1;
+        }
+        i++;
+    }
+
+    i = 0;
+    PCB * temp = new(PCB);
+    if(newCount == 0){
+        if(readyCount == 0){
+            running = idle_pcb;
+        }
+        else{
+            temp = processes.pop_front();
+            processes.push_back(temp);
+        }
+    }
+    
+    */
+
+    // int i = 0;
+    int newToken = 0;
+    int readyToken = 0;
+    it = processes.begin();
+    while(it != processes.end()){
+        if((*it)->state == NEW){
+            newToken += 1;
+            running->switches += 1;
+            (*it)->state = RUNNING;
+            (*it)->started = sys_time;
+            (*it)->pid = fork();
+            running = (*it);
+            if((*it)->pid < 0){
+                perror("Fork failed");
+            }
+            else if((*it)->pid == 0){
+                assertsyscall(execlp((*it)->name, 0), < 0);
+                return;
+            }
+            else{
+                break;
+            }
+        }
+        it++;
+    }
+
+    //PCB* temp = new(PCB);
+    it = processes.begin();
+    if(newToken == 0){
+        while(it != processes.end()){
+            if((*it)->state == READY){
+                (*it)->state = RUNNING;
+                running = (*it);
+                readyToken += 1;
+                break;
+            }
+        }
+        if(readyToken == 0){
+            idle_pcb->state = RUNNING;
+            running = idle_pcb;
+        }
+    }
+
+
+    // Round robin code with iterator
+    /*
     int i = 0;
     int newCount = 0;
     it = processes.begin();
@@ -353,18 +440,21 @@ void scheduler(int signum)
         running = idle_pcb;
     }
 
+    */
+
+
 
     // Original code
     //PCB* tocont = idle_pcb;
 
-    PCB* tocont = running;
+    //PCB* tocont = running;
 
     WRITES("continuing");
-    WRITEI(tocont->pid);
+    WRITEI(running->pid);
     WRITES("\n");
 
-    tocont->state = RUNNING;
-    if(kill(tocont->pid, SIGCONT) == -1)
+    running->state = RUNNING;
+    if(kill(running->pid, SIGCONT) == -1)
     {
         WRITES("in scheduler kill error: ");
         WRITEI(errno);
@@ -402,6 +492,9 @@ void process_done(int signum)
             WRITES("process exited: ");
             WRITEI(cpid);
             WRITES("\n");
+            running->state = TERMINATED;
+            cout << running;
+            running = idle_pcb;
         }
     }
 
@@ -466,7 +559,7 @@ int main(int argc, char **argv)
         newProcess->switches = 0;
         newProcess->ppid = getpid();
         // Need to add pid and started to scheduler
-        processes.push_front(newProcess);
+        processes.push_back(newProcess);
         n++;
     }
 

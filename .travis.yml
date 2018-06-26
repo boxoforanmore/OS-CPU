@@ -1,12 +1,13 @@
 os: linux
-dist: debian
+dist: trusty
 language: cpp
 sudo: required
 before_install:
+- sudo apt-get update
+- sudo apt-get upgrade
 - sudo apt-get install build-essential
 - sudo apt-get install llvm
 - sudo apt-get install valgrind
-- sudo apt-get update
 compiler:
 - g++
 script: ./travis.sh
