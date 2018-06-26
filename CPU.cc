@@ -90,7 +90,7 @@ Add the following functionality.
    c) Restart the idle process to use the rest of the time slice.
 */
 
-#define NUM_SECONDS 5
+#define NUM_SECONDS 20
 #define EVER ;;
 
 #define assertsyscall(x, y) if(!((x) y)){int err = errno; \
@@ -138,6 +138,7 @@ PCB *idle_pcb;
 
 // http://www.cplusplus.com/reference/list/list/
 list<PCB *> processes;
+list<PCB *> ::iterator it;
 
 int sys_time;
 int timer;
@@ -305,7 +306,58 @@ void scheduler(int signum)
     assert(signum == SIGALRM);
     sys_time++;
 
-    PCB* tocont = idle_pcb;
+    // Round robin w/ iterator
+    int i = 0;
+    int newCount = 0;
+    it = processes.begin();
+    while(it != processes.end()){
+        running -> state = READY;
+        running -> interrupts += 1;
+        running -> switches += 1;
+
+        if((*it)->state == NEW){
+            newCount += 1;
+            (*it)->state = RUNNING;
+            (*it)->pid = fork();
+            
+            if ((*it)->pid < 0) {
+                perror("Fork failed");
+            }
+            else if ((*it)->pid == 0){
+                // Hello, Bart....
+                assertsyscall(execlp((*it)->name, 0), < 0);
+            }
+            break;
+        }
+        *it++;
+        i++;
+    }
+
+    i = 0;
+    int readyCount = 0;
+
+
+    it = processes.begin();
+    if(newCount == 0){
+        while(it != processes.end()){
+            if((*it)->state == READY){
+                
+                readyCount += 1;
+                break;
+            }
+            it++;
+            i++;
+        }
+    }
+    if(readyCount == 0){
+        running = idle_pcb;
+    }
+
+
+    // Original code
+    //PCB* tocont = idle_pcb;
+
+    PCB* tocont = running;
 
     WRITES("continuing");
     WRITEI(tocont->pid);
@@ -314,7 +366,7 @@ void scheduler(int signum)
     tocont->state = RUNNING;
     if(kill(tocont->pid, SIGCONT) == -1)
     {
-        WRITES("in sceduler kill error: ");
+        WRITES("in scheduler kill error: ");
         WRITEI(errno);
         WRITES("\n");
         return;
@@ -394,13 +446,30 @@ void create_idle()
     if((idle_pcb->pid = fork()) == 0)
     {
         pause();
+        //execlp("./bashme.sh", 0);
         perror("pause in create_idle_pcb");
         _exit(0);
     }
 }
 
+
 int main(int argc, char **argv)
 {
+
+    int n = 0;
+
+    while(argv[n]){
+        PCB* newProcess = new (PCB);
+        newProcess->state = NEW;
+        newProcess->name = argv[n];
+        newProcess->interrupts = 0;
+        newProcess->switches = 0;
+        newProcess->ppid = getpid();
+        // Need to add pid and started to scheduler
+        processes.push_front(newProcess);
+        n++;
+    }
+
     boot();
 
     create_idle();
@@ -408,5 +477,5 @@ int main(int argc, char **argv)
     cout << running;
 
     int status;
-    waitpid(timer, &status, 0);
+    assertsyscall(waitpid(timer, &status, 0), < 0);
 }
