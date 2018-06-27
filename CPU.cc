@@ -402,6 +402,7 @@ void process_done(int signum)
             while(processes.size() != 0){ 
                 if((*it)->state == TERMINATED){
                     processes.remove(*it);
+                    delete(*it);
                     break;
                 }
                 it++;
