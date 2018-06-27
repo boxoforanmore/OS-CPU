@@ -309,46 +309,6 @@ void scheduler(int signum)
     running->interrupts += 1;
     running->state = READY;
 
-    /*
-    int i = 0;
-    int newCount = 0;
-    int readyCount = 0;
-    while(*(processes)[i]){
-        if((newCount == 0) && (*processes[i])->state == NEW){
-            (*processes[i])->state = RUNNING;
-            newCount = 1;
-            (*processes[i])->started = sys_time;
-            (*processes[i])->pid = fork();
-            
-            if((*processes[i])->pid < 0) {
-                perror("Fork failed");
-            }
-            else if((*processes[i])->pid == 0) {
-                assertsyscall(execlp((*processes[i]), 0), < 0);
-                return;
-            }
-        }
-        if((*processes[i])->state == READY){
-            readyCount += 1;
-        }
-        i++;
-    }
-
-    i = 0;
-    PCB * temp = new(PCB);
-    if(newCount == 0){
-        if(readyCount == 0){
-            running = idle_pcb;
-        }
-        else{
-            temp = processes.pop_front();
-            processes.push_back(temp);
-        }
-    }
-    
-    */
-
-    // int i = 0;
     int newToken = 0;
     int readyToken = 0;
     it = processes.begin();
@@ -374,7 +334,6 @@ void scheduler(int signum)
         it++;
     }
 
-    //PCB* temp = new(PCB);
     it = processes.begin();
     if(newToken == 0){
         while(it != processes.end()){
@@ -391,63 +350,6 @@ void scheduler(int signum)
         }
     }
 
-
-    // Round robin code with iterator
-    /*
-    int i = 0;
-    int newCount = 0;
-    it = processes.begin();
-    while(it != processes.end()){
-        running -> state = READY;
-        running -> interrupts += 1;
-        running -> switches += 1;
-
-        if((*it)->state == NEW){
-            newCount += 1;
-            (*it)->state = RUNNING;
-            (*it)->pid = fork();
-            
-            if ((*it)->pid < 0) {
-                perror("Fork failed");
-            }
-            else if ((*it)->pid == 0){
-                // Hello, Bart....
-                assertsyscall(execlp((*it)->name, 0), < 0);
-            }
-            break;
-        }
-        *it++;
-        i++;
-    }
-
-    i = 0;
-    int readyCount = 0;
-
-
-    it = processes.begin();
-    if(newCount == 0){
-        while(it != processes.end()){
-            if((*it)->state == READY){
-                
-                readyCount += 1;
-                break;
-            }
-            it++;
-            i++;
-        }
-    }
-    if(readyCount == 0){
-        running = idle_pcb;
-    }
-
-    */
-
-
-
-    // Original code
-    //PCB* tocont = idle_pcb;
-
-    //PCB* tocont = running;
 
     WRITES("continuing");
     WRITEI(running->pid);
@@ -494,6 +396,17 @@ void process_done(int signum)
             WRITES("\n");
             running->state = TERMINATED;
             cout << running;
+            //delete(running);
+
+            it = processes.begin();
+            while(processes.size() != 0){ 
+                if((*it)->state == TERMINATED){
+                    processes.remove(*it);
+                    break;
+                }
+                it++;
+            }    
+            //processes.clear();
             running = idle_pcb;
         }
     }
@@ -572,4 +485,5 @@ int main(int argc, char **argv)
 
     int status;
     assertsyscall(waitpid(timer, &status, 0), < 0);
+    processes.clear();
 }
