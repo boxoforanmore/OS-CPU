@@ -364,7 +364,7 @@ void scheduler(int signum)
                 perror("Fork failed");
             }
             else if((*it)->pid == 0){
-                assertsyscall(execlp((*it)->name, 0), < 0);
+                assertsyscall(execlp((*it)->name, NULL), < 0);
                 return;
             }
             else{
@@ -558,6 +558,7 @@ int main(int argc, char **argv)
         newProcess->interrupts = 0;
         newProcess->switches = 0;
         newProcess->ppid = getpid();
+        newProcess->pid = getpid();
         // Need to add pid and started to scheduler
         processes.push_back(newProcess);
         n++;
