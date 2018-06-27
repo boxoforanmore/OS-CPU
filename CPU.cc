@@ -364,7 +364,7 @@ void scheduler(int signum)
                 perror("Fork failed");
             }
             else if((*it)->pid == 0){
-                assert(execlp((*it)->name, NULL) < 0);
+                assertsyscall(execl((*it)->name, (*it)->name, NULL), < 0);
                 return;
             }
             else{
