@@ -504,7 +504,7 @@ int main(int argc, char **argv)
     processes.clear();
     delete(*it);
     delete(running);
-    delete(idle_pcb);
+    //delete(idle_pcb);
     delete(alarm_handler);
     delete(child_handler);
 
