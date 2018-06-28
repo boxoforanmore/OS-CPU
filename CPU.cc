@@ -505,7 +505,7 @@ int main(int argc, char **argv)
     assertsyscall(kill(idle_pcb->pid, SIGSTOP), != 0);
     delete(idle_pcb);
     delete(*it);
-    delete(running);
+    //delete(running);
     //delete(*action);
     //delete(idle_pcb);
     //delete(alarm_handler);
