@@ -310,12 +310,10 @@ void scheduler(int signum)
     running->state = READY;
     
 
-    bool newToken = false;
     bool readyToken = false;
     it = processes.begin();
     while(it != processes.end()){
         if((*it)->state == NEW){
-            newToken = true;
             running->switches += 1;
             (*it)->state = RUNNING;
             (*it)->started = sys_time;
@@ -339,10 +337,6 @@ void scheduler(int signum)
         it++;
     }
 
-    //PCB* tocont = running;
-    //PCB* tocont = running;
-
-    
     if(processes.size() > 0){
         do{
             PCB* front = processes.front();
@@ -361,11 +355,6 @@ void scheduler(int signum)
             (*it)->state = RUNNING;
             running = (*it);
             readyToken = true;
-            //assertsyscall(kill(running->pid, SIGCONT), == 0);
-            //printf("Errno: %i", errno);
-            //printf("\n\n\n");
-            //fflush(stdout);
-            //tocont = running;
             break;
         }
         it++;
@@ -374,16 +363,8 @@ void scheduler(int signum)
     if(readyToken == false){
         idle_pcb->state = RUNNING;
         running = idle_pcb;
-        //tocont = running;
-        //assertsyscall(kill(running->pid, SIGCONT), == 0);
         
     }
-
-    //WRITES("continuing process ");
-    //WRITES(running->name);
-    //WRITES(" with pid: ");
-    //WRITEI(running->pid);
-    //WRITES("\n");
 
     running->state = RUNNING;
     if(kill(running->pid, SIGCONT) == -1)
@@ -434,18 +415,6 @@ void process_done(int signum)
             WRITES("\n");
             running->state = TERMINATED;
             cout << running;
-            //delete(running);
-
-            //it = processes.begin();
-            //while(processes.size() != 0){ 
-            //    if((*it)->state == TERMINATED){
-            //        //delete(*it);
-            //        //processes.remove(running);
-            //        delete(running);
-            //    }
-            //    it++;
-            //}    
-            //processes.clear();
             idle_pcb->state = RUNNING;
             running = idle_pcb;
             assertsyscall(kill(running->pid, SIGCONT), == 0);
@@ -494,7 +463,6 @@ void create_idle()
     if((idle_pcb->pid = fork()) == 0)
     {
         pause();
-        //execlp("./bashme.sh", 0);
         perror("pause in create_idle_pcb");
         _exit(0);
     }
@@ -517,9 +485,6 @@ int main(int argc, char **argv)
         newProcess->name = argv[n];
         newProcess->interrupts = 0;
         newProcess->switches = 0;
-        //newProcess->ppid = getpid();
-        //newProcess->pid = getpid();
-        // Need to add pid and started to scheduler
         processes.push_back(newProcess);
         n++;
     }
@@ -537,4 +502,6 @@ int main(int argc, char **argv)
        delete(front);
     }
     processes.clear();
+
+    return 0;
 }
