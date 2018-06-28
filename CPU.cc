@@ -505,8 +505,8 @@ int main(int argc, char **argv)
     delete(*it);
     delete(running);
     //delete(idle_pcb);
-    delete(alarm_handler);
-    delete(child_handler);
+    //delete(alarm_handler);
+    //delete(child_handler);
 
     return 0;
 }
