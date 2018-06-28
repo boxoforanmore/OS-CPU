@@ -308,6 +308,7 @@ void scheduler(int signum)
 
     running->interrupts += 1;
     running->state = READY;
+    
 
     int newToken = 0;
     int readyToken = 0;
@@ -318,45 +319,57 @@ void scheduler(int signum)
             running->switches += 1;
             (*it)->state = RUNNING;
             (*it)->started = sys_time;
+            (*it)->ppid = getpid();
             (*it)->pid = fork();
             running = (*it);
             if((*it)->pid < 0){
                 perror("Fork failed");
             }
             else if((*it)->pid == 0){
-                assertsyscall(execl((*it)->name, (*it)->name, NULL), < 0);
+                execl((*it)->name, (*it)->name, NULL);
+                printf("I'm hosed");
+                fflush(stdout);
                 return;
             }
             else{
-                break;
+                return;
             }
         }
         it++;
     }
 
+    PCB* tocont = running;
+    //PCB* tocont = running;
+
     it = processes.begin();
-    if(newToken == 0){
-        while(it != processes.end()){
-            if((*it)->state == READY){
-                (*it)->state = RUNNING;
-                running = (*it);
-                readyToken += 1;
-                break;
-            }
-        }
-        if(readyToken == 0){
-            idle_pcb->state = RUNNING;
-            running = idle_pcb;
+    while(it != processes.end()){
+        if((*it)->state == READY){
+            (*it)->state = RUNNING;
+            running = (*it);
+            readyToken += 1;
+            //assertsyscall(kill(running->pid, SIGCONT), == 0);
+            printf("Errorno: %i", errno);
+            printf("\n\n\n");
+            fflush(stdout);
+            tocont = running;
         }
     }
 
+    if(readyToken == 0){
+        idle_pcb->state = RUNNING;
+        running = idle_pcb;
+        tocont = running;
+        //assertsyscall(kill(running->pid, SIGCONT), == 0);
+        
+    }
 
+    //PCB* tocont = running;
     WRITES("continuing");
-    WRITEI(running->pid);
+    WRITEI(tocont->pid);
     WRITES("\n");
 
-    running->state = RUNNING;
-    if(kill(running->pid, SIGCONT) == -1)
+    tocont->state = RUNNING;
+    if(kill(tocont->pid, SIGCONT) == -1)
     {
         WRITES("in scheduler kill error: ");
         WRITEI(errno);
@@ -365,6 +378,7 @@ void scheduler(int signum)
     }
     WRITES("---- leaving scheduler\n");
 }
+
 
 void process_done(int signum)
 {
@@ -401,14 +415,18 @@ void process_done(int signum)
             it = processes.begin();
             while(processes.size() != 0){ 
                 if((*it)->state == TERMINATED){
-                    processes.remove(*it);
+                    delete(*it);
+                    processes.remove(running);
                     delete(running);
-                    break;
+                    //break;
                 }
                 it++;
             }    
             //processes.clear();
+            idle_pcb->state = RUNNING;
             running = idle_pcb;
+            assertsyscall(kill(running->pid, SIGCONT), == -1);
+
         }
     }
 
@@ -465,26 +483,28 @@ int main(int argc, char **argv)
 
     int n = 0;
 
+    create_idle();
+    running = idle_pcb;
+    cout << running;
+
     while(argv[n]){
         PCB* newProcess = new (PCB);
         newProcess->state = NEW;
         newProcess->name = argv[n];
         newProcess->interrupts = 0;
         newProcess->switches = 0;
-        newProcess->ppid = getpid();
-        newProcess->pid = getpid();
+        //newProcess->ppid = getpid();
+        //newProcess->pid = getpid();
         // Need to add pid and started to scheduler
         processes.push_back(newProcess);
         n++;
     }
+    processes.push_back(idle_pcb);
 
     boot();
 
-    create_idle();
-    running = idle_pcb;
-    cout << running;
-
     int status;
     assertsyscall(waitpid(timer, &status, 0), < 0);
+
     processes.clear();
 }
