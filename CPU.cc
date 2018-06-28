@@ -418,7 +418,6 @@ void process_done(int signum)
             idle_pcb->state = RUNNING;
             running = idle_pcb;
             assertsyscall(kill(running->pid, SIGCONT), == 0);
-
         }
     }
 
@@ -502,7 +501,7 @@ int main(int argc, char **argv)
        delete(front);
     }
     processes.clear();
-    //assertsyscall(kill(idle_pcb->pid, SIGSTOP), != 0);
+    assertsyscall(kill(idle_pcb->pid, SIGINT), != 0);
     delete(idle_pcb);
     delete(*it);
     //delete(running);
