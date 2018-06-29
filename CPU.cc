@@ -471,7 +471,6 @@ void create_idle()
 int main(int argc, char **argv)
 {
 
-    // should this be 1 or 0 here?
     int n = 1;
 
     create_idle();
@@ -504,11 +503,6 @@ int main(int argc, char **argv)
     assertsyscall(kill(idle_pcb->pid, SIGINT), == 0);
     delete(idle_pcb);
     delete(*it);
-    //delete(running);
-    //delete(*action);
-    //delete(idle_pcb);
-    //delete(alarm_handler);
-    //delete(child_handler);
 
     return 0;
 }
