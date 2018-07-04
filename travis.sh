@@ -16,3 +16,5 @@ echo "Running valgrind on ./CPU" `valgrind --leak-check=full --show-leak-kinds=a
 echo
 echo
 ./a.out "./count.sh" "./count.sh" "./count.sh"
+
+exit 0
