@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 echo
 echo
 echo "Running: g++ CPU.cc -Wall -o CPU"  `g++ CPU.cc -Wall -o CPU`
