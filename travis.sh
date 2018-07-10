@@ -1,18 +1,16 @@
 #!/bin/bash
 echo
 echo
-echo "Running: g++ CPU.cc -Wall -o CPU"  `g++ CPU_ASS.cc -Wall -o CPU`
-echo "(for valgrind)"
+echo "Running: g++ CPU_ASS.cc -Wall -DEBUG" 
+echo `g++ CPU_ASS.cc -Wall -DEBUG`
 echo
 echo
-echo "Running: g++ CPU.cc -Wall -DEBUG" `g++ CPU_ASS.cc -Wall -DEBUG`
-echo "(for runtime)"
-echo
-echo
-echo "Running clang-tidy on CPU.cc" `clang-tidy CPU_ASS.cc -- -Imy_project/include -DMY_DEFINES ...`
+echo "Running clang-tidy on CPU_ASS.cc" 
+echo `clang-tidy CPU_ASS.cc -- -Imy_project/include -DMY_DEFINES ...`
 echo
 echo 
-echo "Running valgrind on ./CPU" `valgrind --leak-check=full --show-leak-kinds=all  ./a.out`
+echo "Running valgrind on ./CPU" 
+echo `valgrind --leak-check=full --show-leak-kinds=all  ./a.out`
 echo
 echo
 ./a.out

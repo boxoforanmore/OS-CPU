@@ -87,7 +87,8 @@ Add the following functionality.
 #define ever ;;
 #define assertsyscall(x, y) if(!((x) y)){int err = errno; \
     fprintf(stderr, "In file %s at line %d: ", __FILE__, __LINE__); \
-        perror(#x); exit(err);}
+        perror(#x); _exit(err);}
+
 // http://man7.org/linux/man-pages/man7/signal-safety.7.html
 #define WRITES(a) { const char *foo = a; write(1, foo, strlen(foo)); }
 #define WRITEI(a) { char buf[10]; assert(eye2eh(a, buf, 10, 10) != -1); WRITES(buf); }
@@ -335,7 +336,7 @@ void boot()
     if(timer_pid == 0)
     {
         send_signals(SIGALRM, getppid(), 1, NUM_SECONDS);
-        exit(0);
+        _exit(0);
     }
 }
 
@@ -352,7 +353,7 @@ void create_idle()
     {
         pause();
         perror("pause in create_idle_pcb");
-        exit(0);
+        _exit(0);
     }
 }
 
